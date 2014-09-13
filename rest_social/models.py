@@ -9,11 +9,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save
 from model_utils import Choices
-import urbanairship
+# import urbanairship
 from manticore_django.manticore_django.models import CoreModel
-
-
-User = get_user_model()
 
 
 class FollowableModel():
@@ -48,8 +45,13 @@ class Tag(CoreModel):
 FollowableModel.register(Tag)
 
 
-# Expects tags is stored in a field called 'related_tags' on implementing model and it has a parameter called TAG_FIELD to be parsed
 def relate_tags(sender, **kwargs):
+    """
+    Intended to be used as a receiver function for a `post_save` signal on models that have tags
+
+    Expects tags is stored in a field called 'related_tags' on implementing model
+    and it has a parameter called TAG_FIELD to be parsed
+    """
     # If we're saving related_tags, don't save again so we avoid duplicating notifications
     if kwargs['update_fields'] and 'related_tags' not in kwargs['update_fields']:
         return
@@ -67,13 +69,21 @@ def relate_tags(sender, **kwargs):
 
 
 def mentions(sender, **kwargs):
+    """
+    Intended to be used as a receiver function for a `post_save` signal on models that have @mentions
+    Implementing model must have an attribute TAG_FIELD where @mentions are stored in raw form
+
+    This function creates notifications but does not associate mentioned users with the created model instance
+    """
     if kwargs['created']:
         message = getattr(kwargs['instance'], sender.TAG_FIELD, '')
+        content_object = getattr(kwargs['instance'], 'content_object', kwargs['instance'])
 
         for user in re.findall(ur"@[a-zA-Z0-9_.]+", message):
+            User = get_user_model()
             try:
                 receiver = User.objects.get(username=user[1:])
-                create_notification(receiver, kwargs['instance'].user, kwargs['instance'], Notification.TYPES.mention)
+                create_notification(receiver, kwargs['instance'].user, content_object, Notification.TYPES.mention)
             except User.DoesNotExist:
                 pass
 
@@ -83,27 +93,15 @@ class Comment(CoreModel):
     object_id = models.PositiveIntegerField(db_index=True)
     content_object = generic.GenericForeignKey()
 
+    TAG_FIELD = 'description'
+
     description = models.CharField(max_length=140)
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
-
-    #TODO: Not project agnostic
-    legacy_comment_id = models.CharField(max_length=50, unique=True, db_index=True, blank=True, null=True)
 
     class Meta:
         ordering = ['created']
 
-
-def comment_post_save(sender, **kwargs):
-    if kwargs['created']:
-        comment = kwargs['instance']
-        for user in re.findall(ur"@[a-zA-Z0-9_.]+", comment.description):
-            try:
-                receiver = User.objects.get(username=user[1:])
-                create_notification(receiver, comment.user, comment.content_object, Notification.TYPES.mention)
-            except User.DoesNotExist:
-                pass
-
-post_save.connect(comment_post_save, sender=Comment)
+post_save.connect(mentions, sender=Comment)
 
 
 # Allows a user to 'follow' objects
@@ -185,30 +183,31 @@ class Notification(CoreModel):
 
 
 def create_notification(receiver, reporter, content_object, notification_type):
-    # If the receiver of this notification is the same as the reporter or
-    # if the user has blocked this type, then don't create
-    if receiver == reporter or not NotificationSetting.objects.get(notification_type=notification_type, user=receiver).allow:
-        return
-
-    notification = Notification.objects.create(user=receiver,
-                                               reporter=reporter,
-                                               content_object=content_object,
-                                               notification_type=notification_type)
-    notification.save()
-
-    if AirshipToken.objects.filter(user=receiver, expired=False).exists():
-        try:
-            device_tokens = list(AirshipToken.objects.filter(user=receiver, expired=False).values_list('token', flat=True))
-            airship = urbanairship.Airship(settings.AIRSHIP_APP_KEY, settings.AIRSHIP_APP_MASTER_SECRET)
-
-            for device_token in device_tokens:
-                push = airship.create_push()
-                push.audience = urbanairship.device_token(device_token)
-                push.notification = urbanairship.notification(ios=urbanairship.ios(alert=notification.push_message(), badge='+1'))
-                push.device_types = urbanairship.device_types('ios')
-                push.send()
-        except urbanairship.AirshipFailure:
-            pass
+    # # If the receiver of this notification is the same as the reporter or
+    # # if the user has blocked this type, then don't create
+    # if receiver == reporter or not NotificationSetting.objects.get(notification_type=notification_type, user=receiver).allow:
+    #     return
+    #
+    # notification = Notification.objects.create(user=receiver,
+    #                                            reporter=reporter,
+    #                                            content_object=content_object,
+    #                                            notification_type=notification_type)
+    # notification.save()
+    #
+    # if AirshipToken.objects.filter(user=receiver, expired=False).exists():
+    #     try:
+    #         device_tokens = list(AirshipToken.objects.filter(user=receiver, expired=False).values_list('token', flat=True))
+    #         airship = urbanairship.Airship(settings.AIRSHIP_APP_KEY, settings.AIRSHIP_APP_MASTER_SECRET)
+    #
+    #         for device_token in device_tokens:
+    #             push = airship.create_push()
+    #             push.audience = urbanairship.device_token(device_token)
+    #             push.notification = urbanairship.notification(ios=urbanairship.ios(alert=notification.push_message(), badge='+1'))
+    #             push.device_types = urbanairship.device_types('ios')
+    #             push.send()
+    #     except urbanairship.AirshipFailure:
+    #         pass
+    pass  # Not sure if we're using Urban Airship going forward
 
 
 class NotificationSetting(CoreModel):
