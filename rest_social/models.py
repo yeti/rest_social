@@ -185,7 +185,8 @@ class Notification(CoreModel):
 def create_notification(receiver, reporter, content_object, notification_type):
     # # If the receiver of this notification is the same as the reporter or
     # # if the user has blocked this type, then don't create
-    # if receiver == reporter or not NotificationSetting.objects.get(notification_type=notification_type, user=receiver).allow:
+    # if receiver == reporter or not NotificationSetting.objects.get(
+    #         notification_type=notification_type, user=receiver).allow:
     #     return
     #
     # notification = Notification.objects.create(user=receiver,
@@ -196,13 +197,15 @@ def create_notification(receiver, reporter, content_object, notification_type):
     #
     # if AirshipToken.objects.filter(user=receiver, expired=False).exists():
     #     try:
-    #         device_tokens = list(AirshipToken.objects.filter(user=receiver, expired=False).values_list('token', flat=True))
+    #         device_tokens = list(AirshipToken.objects.filter(user=receiver, expired=False).
+    #                              values_list('token', flat=True))
     #         airship = urbanairship.Airship(settings.AIRSHIP_APP_KEY, settings.AIRSHIP_APP_MASTER_SECRET)
     #
     #         for device_token in device_tokens:
     #             push = airship.create_push()
     #             push.audience = urbanairship.device_token(device_token)
-    #             push.notification = urbanairship.notification(ios=urbanairship.ios(alert=notification.push_message(), badge='+1'))
+    #             push.notification = urbanairship.notification(
+    #                 ios=urbanairship.ios(alert=notification.push_message(), badge='+1'))
     #             push.device_types = urbanairship.device_types('ios')
     #             push.send()
     #     except urbanairship.AirshipFailure:
@@ -232,7 +235,9 @@ def create_notifications(sender, **kwargs):
 
     if kwargs['created']:
         user = kwargs['instance']
-        NotificationSetting.objects.bulk_create([NotificationSetting(user=user, notification_type=pk) for pk, name in Notification.TYPES])
+        NotificationSetting.objects.bulk_create(
+            [NotificationSetting(user=user, notification_type=pk) for pk, name in Notification.TYPES]
+        )
 
 post_save.connect(create_notifications)
 

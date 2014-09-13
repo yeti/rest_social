@@ -64,7 +64,11 @@ def post_social_media(user_social_auth, social_obj_pk):
         message_trunc = 140 - len(link) - 1 - 3
 
         # Truncate the message if the message + url is over 140
-        safe_message = ("{0}... {1}".format(message[:message_trunc], link)) if len(full_message_url) > 140 else full_message_url
+        if len(full_message_url) > 140:
+            safe_message = "{0}... {1}".format(message[:message_trunc], link)
+        else:
+            safe_message = full_message_url
+
         twitter.update_status(status=safe_message, wrap_links=True)
 
 
@@ -80,5 +84,7 @@ def get_social_model():
         raise ImproperlyConfigured("SOCIAL_MODEL must be of the form 'app_label.model_name'")
     social_model = get_model(app_label, model_name)
     if social_model is None:
-        raise ImproperlyConfigured("SOCIAL_MODEL refers to model '%s' that has not been installed" % settings.SOCIAL_MODEL)
+        raise ImproperlyConfigured(
+            "SOCIAL_MODEL refers to model '%s' that has not been installed" % settings.SOCIAL_MODEL
+        )
     return social_model
