@@ -107,7 +107,7 @@ post_save.connect(mentions, sender=Comment)
 # Allows a user to 'follow' objects
 class Follow(CoreModel):
     content_type = models.ForeignKey(ContentType)
-    object_id = models.CharField(max_length=250, db_index=True)
+    object_id = models.PositiveIntegerField(db_index=True)
     content_object = generic.GenericForeignKey()
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
