@@ -149,6 +149,18 @@ class Flag(CoreModel):
         unique_together = (("user", "content_type", "object_id"),)
 
 
+class Share(CoreModel):
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey()
+    shared_with = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='shared_with')
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+
+    class Meta:
+        unique_together = (("user", "content_type", "object_id", "id"),)
+
+
 # Stores user tokens from Urban Airship
 class AirshipToken(CoreModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
@@ -226,7 +238,6 @@ class NotificationSetting(CoreModel):
 
     def display_name(self):
         return u"{0}".format(self.get_notification_type_display())
-
 
 def create_notifications(sender, **kwargs):
     sender_name = "{0}.{1}".format(sender._meta.app_label, sender._meta.object_name)

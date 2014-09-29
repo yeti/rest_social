@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.pagination import PaginationSerializer
-from rest_social.rest_social.models import Tag, Comment, Follow, Flag
+from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share
 from rest_user.rest_user.serializers import UserSerializer
 from videos.models import User
 
@@ -31,6 +31,14 @@ class FollowSerializer(serializers.ModelSerializer):
         user = User.objects.get(pk=obj.object_id)
         serializer = UserSerializer(user)
         return serializer.data
+
+
+class ShareSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    shared_with = UserSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Share
 
 
 class PaginatedFollowSerializer(PaginationSerializer):
