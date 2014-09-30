@@ -239,6 +239,7 @@ class NotificationSetting(CoreModel):
     def display_name(self):
         return u"{0}".format(self.get_notification_type_display())
 
+
 def create_notifications(sender, **kwargs):
     sender_name = "{0}.{1}".format(sender._meta.app_label, sender._meta.object_name)
     if sender_name.lower() != settings.AUTH_USER_MODEL.lower():
