@@ -50,3 +50,21 @@ class FlagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Flag
+
+
+class FollowPaginationSerializer(PaginationSerializer):
+    def __init__(self, *args, **kwargs):
+        """
+        Overrode BasePaginationSerializer init to set object serializer as Follow Serializer.
+        """
+        super(FollowPaginationSerializer, self).__init__(*args, **kwargs)
+        results_field = self.results_field
+        object_serializer = FollowSerializer
+        if 'context' in kwargs:
+            context_kwarg = {'context': kwargs['context']}
+        else:
+            context_kwarg = {}
+
+        self.fields[results_field] = object_serializer(source='object_list',
+                                                       many=True,
+                                                       **context_kwarg)

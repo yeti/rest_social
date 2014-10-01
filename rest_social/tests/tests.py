@@ -5,6 +5,7 @@ from rest_core.rest_core.factories import UserFactory
 from rest_core.rest_core.test import ManticomTestCase
 from django.conf import settings
 from django.apps import apps as django_apps
+from rest_social.rest_social.models import Follow
 
 __author__ = 'winnietong'
 
@@ -74,3 +75,62 @@ class CommentTestCase(BaseAPITests):
                                        data,
                                        self.dev_user
         )
+
+
+class UserFollowingTestCase(BaseAPITests):
+    def test_user_can_follow_each_other(self):
+        test_user1 = UserFactory()
+        user_content_type = ContentType.objects.get_for_model(User)
+        follow_url = reverse('follows-list')
+        # Dev User to follow Test User 1
+        data = {
+            'content_type': user_content_type.pk,
+            'object_id': test_user1.pk,
+            'user': self.dev_user.pk
+        }
+        response = self.assertManticomPOSTResponse(follow_url,
+                                       "$followRequest",
+                                       "$followResponse",
+                                       data,
+                                       self.dev_user
+        )
+        self.assertEqual(response.data['user_following']['username'], test_user1.username)
+
+    def test_following_endpoint(self):
+        test_user1 = UserFactory()
+        test_user2 = UserFactory()
+        user_content_type = ContentType.objects.get_for_model(User)
+        # Dev User to follow User 1, User 2 to follow Dev User
+        Follow.objects.create(content_type=user_content_type, object_id=test_user1.pk, user=self.dev_user)
+        Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=test_user2)
+        following_url = reverse('users-following', args=[self.dev_user.pk])
+        response = self.assertManticomGETResponse(following_url,
+                                                   None,
+                                                   "$followResponse",
+                                                   self.dev_user)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['user_following']['username'], test_user1.username)
+
+    def test_follower_endpoint(self):
+        test_user1 = UserFactory()
+        test_user2 = UserFactory()
+        user_content_type = ContentType.objects.get_for_model(User)
+        # Dev User to follow User 1, User 2 to follow Dev User
+        Follow.objects.create(content_type=user_content_type, object_id=test_user1.pk, user=self.dev_user)
+        Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=test_user2)
+        followers_url = reverse('users-followers', args=[self.dev_user.pk])
+        response = self.assertManticomGETResponse(followers_url,
+                                                   None,
+                                                   "$followResponse",
+                                                   self.dev_user)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['user']['username'], test_user2.username)
+        # self.assertEqual(response.data['count'], 1)
+        # self.assertEqual(response.data['results'][0]['username'], test_user1.username)
+        # # Test User 2 is follower of User 1
+        # follower_url = reverse('users-followers', args=[test_user1.pk])
+        # response = self.assertManticomGETResponse(follower_url,
+        #                                           None,
+        #                                           "$followResponse",
+        #                                           test_user1)
+        # print response
