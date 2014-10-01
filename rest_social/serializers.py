@@ -35,7 +35,6 @@ class FollowSerializer(serializers.ModelSerializer):
 
 class ShareSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    shared_with = UserSerializer(read_only=True, many=True)
 
     class Meta:
         model = Share
