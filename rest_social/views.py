@@ -1,9 +1,9 @@
 from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route
-from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share
+from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share, Like
 from rest_social.rest_social.serializers import TagSerializer, CommentSerializer, FollowSerializer, FlagSerializer, \
-    ShareSerializer, FollowPaginationSerializer
+    ShareSerializer, FollowPaginationSerializer, LikeSerializer
 from rest_user.rest_user.views import UserViewSet
 from django.contrib.auth import get_user_model
 
@@ -37,6 +37,14 @@ class FollowViewSet(viewsets.ModelViewSet):
 class ShareViewSet(viewsets.ModelViewSet):
     queryset = Share.objects.all()
     serializer_class = ShareSerializer
+
+    def pre_save(self, obj):
+        obj.user = self.request.user
+
+
+class LikeViewSet(viewsets.ModelViewSet):
+    queryset = Like.objects.all()
+    serializer_class = LikeSerializer
 
     def pre_save(self, obj):
         obj.user = self.request.user
