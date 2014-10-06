@@ -19,7 +19,7 @@ def social_auth_user(strategy, uid, user=None, *args, **kwargs):
     Delete UserSocialAuth if UserSocialAuth entry belongs to another
     user.
     """
-    social = UserSocialAuth.get_social_auth(strategy.backend.name, uid)
+    social = UserSocialAuth.get_social_auth(kwargs['backend'].name, uid)
     if social:
         if user and social.user != user:
             # Delete UserSocialAuth pairing so this account can now connect
@@ -39,9 +39,10 @@ def save_extra_data(strategy, details, response, uid, user, social, *args, **kwa
     if user is None:
         return
 
-    if strategy.backend.name == "facebook":
-        # if 'website' in response:
-        #     user.website = response['website']
+    if kwargs['backend'].name == "facebook":
+
+        if 'email' in response:
+            user.email = response['email']
 
         if 'location' in response:
             user.location = response['location']['name']
@@ -55,12 +56,12 @@ def save_extra_data(strategy, details, response, uid, user, social, *args, **kwa
 def get_profile_image(strategy, details, response, uid, user, social, is_new=False, *args, **kwargs):
     """Attempt to get a profile image for the User"""
 
-    # If we don't have a user or the user isn't new then just return
-    if user is None or not is_new:
+    # If we don't have a user then just return
+    if user is None:
         return
 
     # Save photo from FB
-    if strategy.backend.name == "facebook":
+    if kwargs['backend'].name == "facebook":
         try:
             image_url = "https://graph.facebook.com/%s/picture?type=large" % uid
             result = urllib.urlretrieve(image_url)
@@ -72,7 +73,7 @@ def get_profile_image(strategy, details, response, uid, user, social, is_new=Fal
             retry_cloudfiles(save_image, user, uid, result)
         except URLError:
             pass
-    elif strategy.backend.name == "twitter" and social:
+    elif kwargs['backend'].name == "twitter" and social:
         try:
             # Get profile image to save
             if response['profile_image_url'] != '':

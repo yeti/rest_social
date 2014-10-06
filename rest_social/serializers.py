@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.pagination import PaginationSerializer
 from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share, Like
-from rest_user.rest_user.serializers import UserSerializer
+from rest_user.rest_user.serializers import UserSerializer, LoginSerializer
 from videos.models import User
 
 __author__ = 'baylee'
@@ -75,3 +75,8 @@ class FollowPaginationSerializer(PaginationSerializer):
         self.fields[results_field] = object_serializer(source='object_list',
                                                        many=True,
                                                        **context_kwarg)
+
+
+class SocialSignUpSerializer(LoginSerializer):
+    class Meta(LoginSerializer.Meta):
+        fields = ('email', 'username', 'client_id', 'client_secret')
