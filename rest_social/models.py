@@ -94,6 +94,7 @@ class Comment(CoreModel):
     content_object = generic.GenericForeignKey()
 
     TAG_FIELD = 'description'
+    related_tags = models.ManyToManyField(Tag, blank=True, null=True)
 
     description = models.CharField(max_length=140)
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
@@ -102,6 +103,7 @@ class Comment(CoreModel):
         ordering = ['created']
 
 post_save.connect(mentions, sender=Comment)
+post_save.connect(relate_tags, sender=Comment)
 
 
 # Allows a user to 'follow' objects

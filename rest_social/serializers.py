@@ -18,6 +18,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
+        exclude = ('related_tags',)
 
 
 class FollowSerializer(serializers.ModelSerializer):

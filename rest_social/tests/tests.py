@@ -5,7 +5,7 @@ from rest_core.rest_core.factories import UserFactory
 from rest_core.rest_core.test import ManticomTestCase
 from django.conf import settings
 from django.apps import apps as django_apps
-from rest_social.rest_social.models import Follow
+from rest_social.rest_social.models import Follow, Comment, Tag
 
 __author__ = 'winnietong'
 
@@ -95,6 +95,20 @@ class CommentTestCase(BaseAPITests):
                                        data,
                                        self.dev_user
         )
+
+    def test_comment_related_tags(self):
+        content_type = ContentType.objects.get_for_model(SocialModel)
+        Comment.objects.create(content_type=content_type,
+                               object_id=1,
+                               description='Testing of a hashtag. #django',
+                               user=self.dev_user)
+        tags_url = reverse('tags-list')
+        response = self.assertManticomGETResponse(tags_url,
+                                                  None,
+                                                  "$tagResponse",
+                                                  self.dev_user)
+        self.assertEqual(response.data['results'][0]['name'], 'django')
+        self.assertIsNotNone(Tag.objects.get(name='django'))
 
 
 class UserFollowingTestCase(BaseAPITests):
