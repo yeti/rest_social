@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.core.urlresolvers import reverse
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.decorators import detail_route
@@ -8,8 +6,6 @@ from social.backends.oauth import BaseOAuth1, BaseOAuth2
 from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share, Like
 from rest_social.rest_social.serializers import TagSerializer, CommentSerializer, FollowSerializer, FlagSerializer, \
     ShareSerializer, FollowPaginationSerializer, LikeSerializer, SocialSignUpSerializer
-from rest_user.rest_user.permissions import IsAuthenticatedOrCreate
-from rest_user.rest_user.serializers import SignUpSerializer
 from rest_user.rest_user.views import UserViewSet, SignUp
 from django.contrib.auth import get_user_model
 
