@@ -57,7 +57,9 @@ def relate_tags(sender, **kwargs):
         return
 
     changed = False
-    message = getattr(kwargs['instance'], sender.TAG_FIELD, '')
+    # Get the text of the field that holds tags. If there is no field specified, use an empty string. If the field's
+    # value is None, use an empty string.
+    message = getattr(kwargs['instance'], sender.TAG_FIELD, '') or ''
     for tag in re.findall(ur"#[a-zA-Z0-9_-]+", message):
         tag_obj, created = Tag.objects.get_or_create(name=tag[1:])
         if tag_obj not in kwargs['instance'].related_tags.all():
@@ -76,7 +78,9 @@ def mentions(sender, **kwargs):
     This function creates notifications but does not associate mentioned users with the created model instance
     """
     if kwargs['created']:
-        message = getattr(kwargs['instance'], sender.TAG_FIELD, '')
+        # Get the text of the field that holds tags. If there is no field specified, use an empty string. If the field's
+        # value is None, use an empty string.
+        message = getattr(kwargs['instance'], sender.TAG_FIELD, '') or ''
         content_object = getattr(kwargs['instance'], 'content_object', kwargs['instance'])
 
         for user in re.findall(ur"@[a-zA-Z0-9_.]+", message):
