@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
-from rest_core.rest_core.factories import UserFactory
+from rest_user.rest_user.test.factories import UserFactory
 from rest_core.rest_core.test import ManticomTestCase
 from django.conf import settings
 from django.apps import apps as django_apps
