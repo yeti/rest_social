@@ -1,5 +1,6 @@
 import abc
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.sites.models import Site
 from django.utils.baseconv import base62
 import re
@@ -9,8 +10,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save
 from model_utils import Choices
-# import urbanairship
 from manticore_django.manticore_django.models import CoreModel
+from rest_user.rest_user.models import AbstractYeti
 
 
 class FollowableModel():
@@ -315,3 +316,33 @@ class BaseSocialModel(models.Model):
 
     def create_social_message(self, provider):
         raise NotImplementedError("This has not been implemented")
+
+
+class AbstractSocialYeti(AbstractYeti):
+    follows = GenericRelation(Follow)
+
+    class Meta:
+        abstract = True
+
+    def user_following(self):
+        return self.follow_set.filter(
+            content_type=ContentType.objects.get(app_label=settings.USER_APP_LABEL, model=settings.USER_MODEL)
+        )
+
+    def user_followers(self):
+        return Follow.objects.filter(
+            content_type=ContentType.objects.get(app_label=settings.USER_APP_LABEL, model=settings.USER_MODEL),
+            object_id=self.pk
+        )
+
+    def user_following_count(self):
+        return self.user_following().count()
+
+    def user_followers_count(self):
+        return self.user_followers().count()
+
+    def identifier(self):
+        return u"%s" % self.username
+
+    def type(self):
+        return u"user"

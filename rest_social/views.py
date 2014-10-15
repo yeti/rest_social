@@ -61,7 +61,7 @@ class FlagViewSet(viewsets.ModelViewSet):
         obj.user = self.request.user
 
 
-class UserFollowViewSet(UserViewSet):
+class SocialUserViewSet(UserViewSet):
 
     @detail_route(methods=['get'])
     def following(self, request, pk):
