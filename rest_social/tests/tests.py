@@ -61,15 +61,11 @@ class ShareTestCase(BaseAPITests):
 
 class LikeTestCase(BaseAPITests):
     def test_users_can_like_content(self):
-        test_user = UserFactory()
         content_type = ContentType.objects.get_for_model(SocialModel)
         likes_url = reverse('likes-list')
-        # Dev User to follow Test User 1
         data = {
             'content_type': content_type.pk,
             'object_id': 1,
-            'shared_with': [test_user.pk],
-            'user': self.dev_user.pk
         }
         self.assertManticomPOSTResponse(likes_url,
                                        "$likeRequest",
