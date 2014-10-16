@@ -1,5 +1,4 @@
 import abc
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.sites.models import Site
 from django.utils.baseconv import base62
@@ -81,16 +80,18 @@ def mentions(sender, **kwargs):
     if kwargs['created']:
         # Get the text of the field that holds tags. If there is no field specified, use an empty string. If the field's
         # value is None, use an empty string.
-        message = getattr(kwargs['instance'], sender.TAG_FIELD, '') or ''
-        content_object = getattr(kwargs['instance'], 'content_object', kwargs['instance'])
-
-        for user in re.findall(ur"@[a-zA-Z0-9_.]+", message):
-            User = get_user_model()
-            try:
-                receiver = User.objects.get(username=user[1:])
-                create_notification(receiver, kwargs['instance'].user, content_object, Notification.TYPES.mention)
-            except User.DoesNotExist:
-                pass
+        # message = getattr(kwargs['instance'], sender.TAG_FIELD, '') or ''
+        # content_object = getattr(kwargs['instance'], 'content_object', kwargs['instance'])
+        #
+        # for user in re.findall(ur"@[a-zA-Z0-9_.]+", message):
+        #     User = get_user_model()
+        #     try:
+        #         receiver = User.objects.get(username=user[1:])
+        #         create_notification(receiver, kwargs['instance'].user, content_object, Notification.TYPES.mention)
+        #     except User.DoesNotExist:
+        #         pass
+        # TODO: implement notifications
+        pass
 
 
 class Comment(CoreModel):
@@ -166,99 +167,6 @@ class Share(CoreModel):
 
     class Meta:
         unique_together = (("user", "content_type", "object_id", "id"),)
-
-
-# Stores user tokens from Urban Airship
-class AirshipToken(CoreModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    token = models.CharField(max_length=100)
-    expired = models.BooleanField(default=False)
-
-
-class Notification(CoreModel):
-    TYPES = Choices(*settings.SOCIAL_NOTIFICATION_TYPES)
-    notification_type = models.PositiveSmallIntegerField(choices=TYPES)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="receiver", null=True)
-    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="reporter", null=True, blank=True)
-
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField(db_index=True)
-    content_object = generic.GenericForeignKey()
-
-    def message(self):
-        return unicode(Notification.TYPES._triples[self.notification_type][2])
-
-    def push_message(self):
-        return "{0} {1}".format(self.reporter, self.message())
-
-    def name(self):
-        return u"{0}".format(Notification.TYPES._triples[self.notification_type][1])
-
-    def display_name(self):
-        return u"{0}".format(self.get_notification_type_display())
-
-    class Meta:
-        ordering = ['-created']
-
-
-def create_notification(receiver, reporter, content_object, notification_type):
-    # # If the receiver of this notification is the same as the reporter or
-    # # if the user has blocked this type, then don't create
-    # if receiver == reporter or not NotificationSetting.objects.get(
-    #         notification_type=notification_type, user=receiver).allow:
-    #     return
-    #
-    # notification = Notification.objects.create(user=receiver,
-    #                                            reporter=reporter,
-    #                                            content_object=content_object,
-    #                                            notification_type=notification_type)
-    # notification.save()
-    #
-    # if AirshipToken.objects.filter(user=receiver, expired=False).exists():
-    #     try:
-    #         device_tokens = list(AirshipToken.objects.filter(user=receiver, expired=False).
-    #                              values_list('token', flat=True))
-    #         airship = urbanairship.Airship(settings.AIRSHIP_APP_KEY, settings.AIRSHIP_APP_MASTER_SECRET)
-    #
-    #         for device_token in device_tokens:
-    #             push = airship.create_push()
-    #             push.audience = urbanairship.device_token(device_token)
-    #             push.notification = urbanairship.notification(
-    #                 ios=urbanairship.ios(alert=notification.push_message(), badge='+1'))
-    #             push.device_types = urbanairship.device_types('ios')
-    #             push.send()
-    #     except urbanairship.AirshipFailure:
-    #         pass
-    pass  # Not sure if we're using Urban Airship going forward
-
-
-class NotificationSetting(CoreModel):
-    notification_type = models.PositiveSmallIntegerField(choices=Notification.TYPES)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    allow = models.BooleanField(default=True)
-
-    class Meta:
-        unique_together = ('notification_type', 'user')
-
-    def name(self):
-        return u"{0}".format(Notification.TYPES._triples[self.notification_type][1])
-
-    def display_name(self):
-        return u"{0}".format(self.get_notification_type_display())
-
-
-def create_notifications(sender, **kwargs):
-    sender_name = "{0}.{1}".format(sender._meta.app_label, sender._meta.object_name)
-    if sender_name.lower() != settings.AUTH_USER_MODEL.lower():
-        return
-
-    if kwargs['created']:
-        user = kwargs['instance']
-        NotificationSetting.objects.bulk_create(
-            [NotificationSetting(user=user, notification_type=pk) for pk, name in Notification.TYPES]
-        )
-
-post_save.connect(create_notifications)
 
 
 class FriendAction(CoreModel):
