@@ -1,4 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
+from django.apps import apps
 import requests
 import urllib
 import urllib2
@@ -76,15 +77,10 @@ def get_social_model():
     """
     Returns the social model that is active in this project.
     """
-    from django.db.models import get_model
-
     try:
-        app_label, model_name = settings.SOCIAL_MODEL.split('.')
+        return apps.get_model(settings.SOCIAL_MODEL)
     except ValueError:
         raise ImproperlyConfigured("SOCIAL_MODEL must be of the form 'app_label.model_name'")
-    social_model = get_model(app_label, model_name)
-    if social_model is None:
+    except LookupError:
         raise ImproperlyConfigured(
-            "SOCIAL_MODEL refers to model '%s' that has not been installed" % settings.SOCIAL_MODEL
-        )
-    return social_model
+            "SOCIAL_MODEL refers to model '%s' that has not been installed" % settings.SOCIAL_MODEL)

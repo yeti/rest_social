@@ -1,4 +1,5 @@
 import abc
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.sites.models import Site
 from django.utils.baseconv import base62
@@ -10,6 +11,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from model_utils import Choices
 from manticore_django.manticore_django.models import CoreModel
+from rest_notifications.rest_notifications.models import create_notification, Notification
 from rest_user.rest_user.models import AbstractYeti
 
 
@@ -80,18 +82,16 @@ def mentions(sender, **kwargs):
     if kwargs['created']:
         # Get the text of the field that holds tags. If there is no field specified, use an empty string. If the field's
         # value is None, use an empty string.
-        # message = getattr(kwargs['instance'], sender.TAG_FIELD, '') or ''
-        # content_object = getattr(kwargs['instance'], 'content_object', kwargs['instance'])
-        #
-        # for user in re.findall(ur"@[a-zA-Z0-9_.]+", message):
-        #     User = get_user_model()
-        #     try:
-        #         receiver = User.objects.get(username=user[1:])
-        #         create_notification(receiver, kwargs['instance'].user, content_object, Notification.TYPES.mention)
-        #     except User.DoesNotExist:
-        #         pass
-        # TODO: implement notifications
-        pass
+        message = getattr(kwargs['instance'], sender.TAG_FIELD, '') or ''
+        content_object = getattr(kwargs['instance'], 'content_object', kwargs['instance'])
+
+        for user in re.findall(ur"@[a-zA-Z0-9_.]+", message):
+            User = get_user_model()
+            try:
+                receiver = User.objects.get(username=user[1:])
+                create_notification(receiver, kwargs['instance'].user, content_object, Notification.TYPES.mention)
+            except User.DoesNotExist:
+                pass
 
 
 class Comment(CoreModel):

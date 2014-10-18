@@ -1,17 +1,19 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from manticore_django.manticore_django.utils import get_class
+from rest_social.rest_social.utils import get_social_model
 from rest_user.rest_user.test.factories import UserFactory
 from rest_core.rest_core.test import ManticomTestCase
-from django.conf import settings
-from django.apps import apps as django_apps
 from rest_social.rest_social.models import Follow, Comment, Tag
 
 __author__ = 'winnietong'
 
 
 User = get_user_model()
-SocialModel = django_apps.get_model(settings.SOCIAL_MODEL)
+SocialModel = get_social_model()
+SocialFactory = get_class(settings.SOCIAL_MODEL_FACTORY)
 
 
 class BaseAPITests(ManticomTestCase):
@@ -25,11 +27,9 @@ class FlagTestCase(BaseAPITests):
         test_user = UserFactory()
         content_type = ContentType.objects.get_for_model(SocialModel)
         flag_url = reverse('flags-list')
-        # Dev User to follow Test User 1
         data = {
             'content_type': content_type.pk,
-            'object_id': 1,
-            'user': test_user.pk
+            'object_id': SocialFactory().pk
         }
         self.assertManticomPOSTResponse(flag_url,
                                        "$flagRequest",
@@ -44,12 +44,10 @@ class ShareTestCase(BaseAPITests):
         test_user = UserFactory()
         content_type = ContentType.objects.get_for_model(SocialModel)
         shares_url = reverse('shares-list')
-        # Dev User to follow Test User 1
         data = {
             'content_type': content_type.pk,
-            'object_id': 1,
-            'shared_with': [test_user.pk],
-            'user': self.dev_user.pk
+            'object_id': SocialFactory().pk,
+            'shared_with': [test_user.pk]
         }
         self.assertManticomPOSTResponse(shares_url,
                                        "$shareRequest",
@@ -65,7 +63,7 @@ class LikeTestCase(BaseAPITests):
         likes_url = reverse('likes-list')
         data = {
             'content_type': content_type.pk,
-            'object_id': 1,
+            'object_id': SocialFactory().pk,
         }
         self.assertManticomPOSTResponse(likes_url,
                                        "$likeRequest",
@@ -81,9 +79,8 @@ class CommentTestCase(BaseAPITests):
         comments_url = reverse('comments-list')
         data = {
             'content_type': content_type.pk,
-            'object_id': 1,
-            'description': 'This is a user comment.',
-            'user': self.dev_user.pk
+            'object_id': SocialFactory().pk,
+            'description': 'This is a user comment.'
         }
         self.assertManticomPOSTResponse(comments_url,
                                        "$commentRequest",
@@ -115,8 +112,7 @@ class UserFollowingTestCase(BaseAPITests):
         # Dev User to follow Test User 1
         data = {
             'content_type': user_content_type.pk,
-            'object_id': test_user1.pk,
-            'user': self.dev_user.pk
+            'object_id': test_user1.pk
         }
         response = self.assertManticomPOSTResponse(follow_url,
                                        "$followRequest",
