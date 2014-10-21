@@ -11,7 +11,6 @@ from django.db import models
 from django.db.models.signals import post_save
 from model_utils import Choices
 from manticore_django.manticore_django.models import CoreModel
-from rest_notifications.rest_notifications.models import create_notification, Notification
 from rest_user.rest_user.models import AbstractYeti
 
 
@@ -79,6 +78,11 @@ def mentions(sender, **kwargs):
 
     This function creates notifications but does not associate mentioned users with the created model instance
     """
+    try:
+        from rest_notifications.rest_notifications.models import create_notification, Notification
+    except ImportError:
+        return
+
     if kwargs['created']:
         # Get the text of the field that holds tags. If there is no field specified, use an empty string. If the field's
         # value is None, use an empty string.
