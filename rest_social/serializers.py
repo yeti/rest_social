@@ -10,7 +10,7 @@ __author__ = 'baylee'
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('name',)
+        fields = ('name', 'id')
 
 
 class CommentSerializer(serializers.ModelSerializer):
