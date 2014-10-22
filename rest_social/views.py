@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.decorators import detail_route
 from social.apps.django_app.utils import load_strategy, load_backend
 from social.backends.oauth import BaseOAuth1, BaseOAuth2
@@ -53,7 +53,7 @@ class LikeViewSet(viewsets.ModelViewSet):
         obj.user = self.request.user
 
 
-class FlagViewSet(viewsets.ModelViewSet):
+class FlagView(generics.CreateAPIView):
     queryset = Flag.objects.all()
     serializer_class = FlagSerializer
 

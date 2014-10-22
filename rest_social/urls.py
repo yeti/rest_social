@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, url, include
 from rest_social.rest_social import views
 from rest_framework import routers
-from rest_social.rest_social.views import FlagViewSet, TagViewSet, SocialUserViewSet
+from rest_social.rest_social.views import TagViewSet, SocialUserViewSet
 
 
 router = routers.DefaultRouter()
@@ -16,9 +16,9 @@ router = routers.DefaultRouter()
 # These views do not expect app-specific notifications
 router.register(r'tags', TagViewSet, base_name='tags')
 router.register(r'user_follows', SocialUserViewSet, base_name='user_follows')
-router.register(r'flags', FlagViewSet, base_name='flags')
 
 urlpatterns = patterns('',
     url(r'^', include(router.urls)),
+    url(r'^flag/$', views.FlagView.as_view(), name="flag"),
     url(r'^social_sign_up/$', views.SocialSignUp.as_view(), name="social_sign_up"),
 )

@@ -26,7 +26,7 @@ class FlagTestCase(BaseAPITests):
     def test_users_can_flag_content(self):
         test_user = UserFactory()
         content_type = ContentType.objects.get_for_model(SocialModel)
-        flag_url = reverse('flags-list')
+        flag_url = reverse('flag')
         data = {
             'content_type': content_type.pk,
             'object_id': SocialFactory().pk
