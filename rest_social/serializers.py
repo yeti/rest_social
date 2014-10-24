@@ -22,11 +22,12 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    user_following = serializers.SerializerMethodField('get_user_follow')
+    follower = UserSerializer(read_only=True, source="user")
+    following = serializers.SerializerMethodField('get_user_follow')
 
     class Meta:
         model = Follow
+        exclude = ('user',)
 
     def get_user_follow(self, obj):
         user = User.objects.get(pk=obj.object_id)

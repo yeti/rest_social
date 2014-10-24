@@ -120,7 +120,7 @@ class UserFollowingTestCase(BaseAPITests):
                                        data,
                                        self.dev_user
         )
-        self.assertEqual(response.data['user_following']['username'], test_user1.username)
+        self.assertEqual(response.data['following']['username'], test_user1.username)
 
     def test_following_endpoint(self):
         test_user1 = UserFactory()
@@ -135,7 +135,7 @@ class UserFollowingTestCase(BaseAPITests):
                                                    "$followResponse",
                                                    self.dev_user)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['user_following']['username'], test_user1.username)
+        self.assertEqual(response.data['results'][0]['following']['username'], test_user1.username)
 
     def test_follower_endpoint(self):
         test_user1 = UserFactory()
@@ -150,13 +150,4 @@ class UserFollowingTestCase(BaseAPITests):
                                                    "$followResponse",
                                                    self.dev_user)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['user']['username'], test_user2.username)
-        # self.assertEqual(response.data['count'], 1)
-        # self.assertEqual(response.data['results'][0]['username'], test_user1.username)
-        # # Test User 2 is follower of User 1
-        # follower_url = reverse('users-followers', args=[test_user1.pk])
-        # response = self.assertManticomGETResponse(follower_url,
-        #                                           None,
-        #                                           "$followResponse",
-        #                                           test_user1)
-        # print response
+        self.assertEqual(response.data['results'][0]['follower']['username'], test_user2.username)
