@@ -1,11 +1,14 @@
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import detail_route
+from social.apps.django_app.default.models import UserSocialAuth
 from social.apps.django_app.utils import load_strategy, load_backend
 from social.backends.oauth import BaseOAuth1, BaseOAuth2
 from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share, Like
 from rest_social.rest_social.serializers import TagSerializer, CommentSerializer, FollowSerializer, FlagSerializer, \
     ShareSerializer, FollowPaginationSerializer, LikeSerializer, SocialSignUpSerializer
+from rest_social.rest_social.utils import post_social_media
 from rest_user.rest_user.views import UserViewSet, SignUp
 from django.contrib.auth import get_user_model
 
@@ -115,3 +118,16 @@ class SocialSignUp(SignUp):
                 return Response({"errors": "Error with social authentication"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SocialShareMixin(object):
+
+    @detail_route(methods=['post'])
+    def social_share(self, request, pk):
+        try:
+            user_social_auth = UserSocialAuth.objects.get(user=request.user, provider=request.DATA['provider'])
+            social_obj = self.get_object()
+            post_social_media(user_social_auth, social_obj)
+            return Response({'status': 'success'})
+        except UserSocialAuth.DoesNotExist:
+            raise APIException("User is not authenticated with {}".format(request.DATA['provider']))

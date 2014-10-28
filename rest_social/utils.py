@@ -39,18 +39,15 @@ def post_to_facebook_og(app_access_token, user_social_auth, obj):
 
 
 @task
-def post_social_media(user_social_auth, social_obj_pk):
-    obj = get_social_model().objects.get(pk=social_obj_pk)
-    message = obj.create_social_message(user_social_auth.provider)
-    link = obj.url()
+def post_social_media(user_social_auth, social_obj):
+    message = social_obj.create_social_message(user_social_auth.provider)
+    link = social_obj.url()
 
     if user_social_auth.provider == 'facebook':
         if settings.USE_FACEBOOK_OG:
-            social_model = get_social_model()
-            social_object = social_model.objects.get(pk=obj.pk)
-            post_to_facebook_og(settings.FACEBOOK_APP_ACCESS_TOKEN, user_social_auth, social_object)
+            post_to_facebook_og(settings.SOCIAL_AUTH_FACEBOOK_APP_TOKEN, user_social_auth, social_obj)
         else:
-            post_to_facebook(settings.FACEBOOK_APP_ACCESS_TOKEN, user_social_auth, message, link)
+            post_to_facebook(settings.SOCIAL_AUTH_FACEBOOK_APP_TOKEN, user_social_auth, message, link)
     elif user_social_auth.provider == 'twitter':
         twitter = Twython(
             app_key=settings.SOCIAL_AUTH_TWITTER_KEY,
