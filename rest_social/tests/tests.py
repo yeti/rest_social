@@ -151,3 +151,13 @@ class UserFollowingTestCase(BaseAPITests):
                                                    self.dev_user)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['follower']['username'], test_user2.username)
+
+    def test_user_can_unfollow_user(self):
+        follower = UserFactory()
+        user_content_type = ContentType.objects.get_for_model(User)
+        follow_object = Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=follower)
+        follows_url = reverse('follows-detail', kwargs={'pk': follow_object.pk})
+        # If you are not the follower of the user, you cannot unfollow the user
+        self.assertManticomDELETEResponse(follows_url, self.dev_user, unauthorized=True)
+        # If you are the follower of that user, you can unfollow the user
+        self.assertManticomDELETEResponse(follows_url, follower)
