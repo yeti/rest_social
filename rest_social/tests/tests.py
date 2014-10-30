@@ -157,7 +157,12 @@ class UserFollowingTestCase(BaseAPITests):
         user_content_type = ContentType.objects.get_for_model(User)
         follow_object = Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=follower)
         follows_url = reverse('follows-detail', kwargs={'pk': follow_object.pk})
+
         # If you are not the follower of the user, you cannot unfollow the user
         self.assertManticomDELETEResponse(follows_url, self.dev_user, unauthorized=True)
+
         # If you are the follower of that user, you can unfollow the user
         self.assertManticomDELETEResponse(follows_url, follower)
+
+        # Check that original follow object no longer exists
+        self.assertEqual(Follow.objects.filter(pk=follow_object.pk).exists(), False)
