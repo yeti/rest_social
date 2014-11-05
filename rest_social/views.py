@@ -1,4 +1,4 @@
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import detail_route
@@ -130,4 +130,4 @@ class SocialShareMixin(object):
             post_social_media(user_social_auth, social_obj)
             return Response({'status': 'success'})
         except UserSocialAuth.DoesNotExist:
-            raise APIException("User is not authenticated with {}".format(request.DATA['provider']))
+            raise AuthenticationFailed("User is not authenticated with {}".format(request.DATA['provider']))
