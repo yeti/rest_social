@@ -166,3 +166,22 @@ class UserFollowingTestCase(BaseAPITests):
 
         # Check that original follow object no longer exists
         self.assertEqual(Follow.objects.filter(pk=follow_object.pk).exists(), False)
+
+    def test_user_following_and_follower_count(self):
+        follower1 = UserFactory()
+        follower2 = UserFactory()
+        following = UserFactory()
+        user_content_type = ContentType.objects.get_for_model(User)
+
+        # Follower setup
+        Follow.objects.create(content_type=user_content_type, object_id=following.pk, user=self.dev_user)
+        Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=follower1)
+        Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=follower2)
+
+        users_url = reverse('users-detail', kwargs={'pk': self.dev_user.pk})
+        response = self.assertManticomGETResponse(users_url,
+                                                  None,
+                                                  "$userResponse",
+                                                  self.dev_user)
+        self.assertEqual(response.data['user_following_count'], 1)
+        self.assertEqual(response.data['user_followers_count'], 2)
