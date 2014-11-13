@@ -4,7 +4,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import viewsets, status, generics
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from social.apps.django_app.default.models import UserSocialAuth
 from social.apps.django_app.utils import load_strategy, load_backend
 from social.backends.oauth import BaseOAuth1, BaseOAuth2
@@ -43,6 +43,17 @@ class FollowViewSet(viewsets.ModelViewSet):
 
     def pre_save(self, obj):
         obj.user = self.request.user
+
+    @list_route(methods=['post'])
+    def bulk_create(self, request):
+        serializer = self.get_serializer(data=request.DATA, many=True)
+        if serializer.is_valid():
+            [self.pre_save(obj) for obj in serializer.object]
+            self.object = serializer.save(force_insert=True)
+            [self.post_save(obj, created=True) for obj in self.object]
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ShareViewSet(viewsets.ModelViewSet):

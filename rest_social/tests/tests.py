@@ -185,3 +185,17 @@ class UserFollowingTestCase(BaseAPITests):
                                                   self.dev_user)
         self.assertEqual(response.data['user_following_count'], 1)
         self.assertEqual(response.data['user_followers_count'], 2)
+
+    def test_bulk_follow(self):
+        user1 = UserFactory()
+        user2 = UserFactory()
+
+        url = reverse('follows-bulk-create')
+        user_content_type = ContentType.objects.get_for_model(User)
+        data = [
+            {'content_type': user_content_type.pk, 'object_id': user1.pk},
+            {'content_type': user_content_type.pk, 'object_id': user2.pk}
+        ]
+        self.assertManticomPOSTResponse(url, "$followRequest", "$followResponse", data, self.dev_user)
+        self.assertEqual(user1.user_followers_count(), 1)
+        self.assertEqual(user2.user_followers_count(), 1)
