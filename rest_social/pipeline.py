@@ -44,8 +44,14 @@ def save_extra_data(strategy, details, response, uid, user, social, *args, **kwa
         if 'email' in response:
             user.email = response['email']
 
-        if 'location' in response:
-            user.location = response['location']['name']
+        # TODO: better placement of Location model. What do we do with Twitter or other locations?
+        # if 'location' in response:
+        #     if not user.location:
+        #         Location.objects.create(name=response["location"]["name"], facebook_id=response["location"]["id"])
+        #     else:
+        #         location = user.location
+        #         location.name = response['location']['name']
+        #         location.facebook_id = response['location']['id']
 
         if 'bio' in response:
             user.about = response['bio']
