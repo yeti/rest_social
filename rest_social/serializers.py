@@ -1,10 +1,13 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.pagination import PaginationSerializer
 from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share, Like
 from rest_user.rest_user.serializers import UserSerializer, LoginSerializer
-from videos.models import User
 
 __author__ = 'baylee'
+
+
+User = get_user_model()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -14,11 +17,16 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-
     class Meta:
         model = Comment
         exclude = ('related_tags',)
+
+    def __init__(self, *args, **kwargs):
+        """
+        The `user` field is added here to help with recursive import issues mentioned in rest_user.serializers
+        """
+        super(CommentSerializer, self).__init__(*args, **kwargs)
+        self.fields["user"] = UserSerializer(read_only=True)
 
 
 class FollowSerializer(serializers.ModelSerializer):

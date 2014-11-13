@@ -9,6 +9,7 @@ from rest_social.rest_social.models import Tag, Comment, Follow, Flag, Share, Li
 from rest_social.rest_social.serializers import TagSerializer, CommentSerializer, FollowSerializer, FlagSerializer, \
     ShareSerializer, FollowPaginationSerializer, LikeSerializer, SocialSignUpSerializer
 from rest_social.rest_social.utils import post_social_media
+from rest_user.rest_user.serializers import UserSerializer
 from rest_user.rest_user.views import UserViewSet, SignUp
 from django.contrib.auth import get_user_model
 
@@ -65,6 +66,7 @@ class FlagView(generics.CreateAPIView):
 
 
 class SocialUserViewSet(UserViewSet):
+    serializer_class = UserSerializer
 
     @detail_route(methods=['get'])
     def following(self, request, pk):

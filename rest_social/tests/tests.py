@@ -129,7 +129,7 @@ class UserFollowingTestCase(BaseAPITests):
         # Dev User to follow User 1, User 2 to follow Dev User
         Follow.objects.create(content_type=user_content_type, object_id=test_user1.pk, user=self.dev_user)
         Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=test_user2)
-        following_url = reverse('user_follows-following', args=[self.dev_user.pk])
+        following_url = reverse('users-following', args=[self.dev_user.pk])
         response = self.assertManticomGETResponse(following_url,
                                                    None,
                                                    "$followResponse",
@@ -144,7 +144,7 @@ class UserFollowingTestCase(BaseAPITests):
         # Dev User to follow User 1, User 2 to follow Dev User
         Follow.objects.create(content_type=user_content_type, object_id=test_user1.pk, user=self.dev_user)
         Follow.objects.create(content_type=user_content_type, object_id=self.dev_user.pk, user=test_user2)
-        followers_url = reverse('user_follows-followers', args=[self.dev_user.pk])
+        followers_url = reverse('users-followers', args=[self.dev_user.pk])
         response = self.assertManticomGETResponse(followers_url,
                                                    None,
                                                    "$followResponse",
