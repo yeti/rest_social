@@ -111,7 +111,7 @@ class SocialSignUp(SignUp):
             provider = request.DATA['provider']
 
             # If this request was made with an authenticated user, try to associate this social account with it
-            user = request.user if not request.user.is_anonymous() else None
+            authed_user = request.user if not request.user.is_anonymous() else None
 
             strategy = load_strategy(request)
             backend = load_backend(strategy=strategy, name=provider, redirect_uri=None)
@@ -124,10 +124,14 @@ class SocialSignUp(SignUp):
             elif isinstance(backend, BaseOAuth2):
                 token = request.DATA['access_token']
 
-            user = backend.do_auth(token, user=user)
+            user = backend.do_auth(token, user=authed_user)
             serializer.object = user
 
             if user and user.is_active:
+                if not authed_user and request.DATA['password']:
+                    password = request.DATA['password']
+                    user.set_password(password)
+                    user.save()
                 self.post_save(serializer.object, created=True)
                 headers = self.get_success_headers(serializer.data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
