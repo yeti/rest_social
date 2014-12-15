@@ -1,3 +1,4 @@
+import base64
 from django.conf import settings
 import facebook
 from rest_framework.exceptions import AuthenticationFailed
@@ -129,7 +130,7 @@ class SocialSignUp(SignUp):
 
             if user and user.is_active:
                 if not authed_user and request.DATA['password']:
-                    password = request.DATA['password']
+                    password = base64.decodestring(request.DATA['password'])
                     user.set_password(password)
                     user.save()
                 self.post_save(serializer.object, created=True)
